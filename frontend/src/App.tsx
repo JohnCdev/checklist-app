@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import { Note as NoteModel } from "./models/note";
 import Note from "./components/Note";
-import { Container, Row } from "react-bootstrap";
+import { Button, Container, Row } from "react-bootstrap";
 import styles from "./styles/NotesPage.module.css";
+import stylesUtils from "./styles/utils.module.css";
+import * as NotesApi from "./api/notes-api";
+import AddNoteModal from "./components/AddNoteModal";
 
 function App() {
   const [notes, setNotes] = useState<NoteModel[]>([]);
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
 
   useEffect(() => {
     async function loadNotes() {
       try {
-        const response = await fetch("/api/notes", {
-          method: "GET",
-        });
-        const notes = await response.json();
+        const notes = await NotesApi.fetchNotes();
         setNotes(notes);
       } catch (error) {
         console.error(error);
@@ -26,11 +27,26 @@ function App() {
   return (
     <div>
       <Container>
+        <Button
+          className={`mb-4 ${stylesUtils.blockCenter}`}
+          onClick={() => setShowAddNoteModal(true)}
+        >
+          Add New Note
+        </Button>
         <Row xs={1} md={2} xl={3} className="g-4">
           {notes.map((note) => {
             return <Note note={note} className={styles.note} key={note._id} />;
           })}
         </Row>
+        {showAddNoteModal && (
+          <AddNoteModal
+            onDismiss={() => setShowAddNoteModal(false)}
+            onNoteSaved={(noteResponse) => {
+              setNotes([...notes, noteResponse]);
+              setShowAddNoteModal(false);
+            }}
+          />
+        )}
       </Container>
     </div>
   );
